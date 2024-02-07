@@ -31,10 +31,6 @@ type ResponseToClient struct {
 	Products []Product `json:"products"`
 }
 
-type RequestFromClient struct {
-	UUID     string    `json:"uuid"`
-}
-
 type Product struct {
 	Price       string `json:"price"`
 	ProductID   string `json:"productID"`

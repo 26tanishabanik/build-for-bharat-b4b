@@ -22,56 +22,49 @@ func HealthCheck(c *gin.Context) {
 }
 
 func GetSubStringMatch(c *gin.Context) {
-	wordToSearch := c.Param("wordToSearch")
+	wordToSearch := c.Param("word")
 	payload := model.Payload{}
 	for _, name := range model.ListOfProductNames {
 		if strings.Contains(strings.ToLower(name), strings.ToLower(wordToSearch)) {
 			payload.MatchedWords = append(payload.MatchedWords, name)
 		}
 	}
-	if len(payload.MatchedWords) > 0 {
-		c.JSON(http.StatusOK, payload)
-	} else {
-		c.JSON(http.StatusNotFound, gin.H{"message": "word not found"})
-	}
+	c.JSON(http.StatusOK, payload)
 }
 
 func GetProductResults(c *gin.Context) {
-	productName := c.Param("productName")
-	// UUID := c.PostForm("uuid")
-	var request model.RequestFromClient
-	if err := c.BindJSON(&request); err != nil {
-		fmt.Println("error in binding request body from client: ", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
+	productName := c.Param("name")
+	clientUUID := c.Query("uuid")
 
-	if request.UUID == "" {
+	if clientUUID == "" {
 		newUUID := uuid.New().String()
 		c.JSON(http.StatusOK, gin.H{
 			"uuid": newUUID,
 		})
+		model.ProductMapMutex.Lock()
 		model.ProductMap[newUUID] = model.ProductDetails{
 			Products:          []model.Product{},
 			IsProcessComplete: false,
 			Errors:            []error{},
 		}
+		model.ProductMapMutex.Unlock()
 		go utils.SearchProductsInSecondaryServer(productName, newUUID)
 	} else {
 		var productDetails model.ProductDetails
 		var response model.ResponseToClient
 		model.ProductMapMutex.RLock()
-		productDetails = model.ProductMap[request.UUID]
+		productDetails = model.ProductMap[clientUUID]
 		model.ProductMapMutex.RUnlock()
 
 		if productDetails.IsProcessComplete {
 			response.Products = productDetails.Products
-			response.UUID = request.UUID
-			fmt.Printf("Received products for uuid %s: %v\n", request.UUID, productDetails.Products)
+			response.UUID = clientUUID
+			fmt.Printf("Received products for uuid %s: %v\n", clientUUID, productDetails.Products)
 			c.JSON(http.StatusOK, response)
-			delete(model.ProductMap, request.UUID)
+			delete(model.ProductMap, clientUUID)
 		} else {
 			response.Products = []model.Product{}
-			response.UUID = request.UUID
+			response.UUID = clientUUID
 			c.JSON(http.StatusOK, response)
 		}
 	}
