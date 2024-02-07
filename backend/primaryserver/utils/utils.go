@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"primaryserver/pkg/server"
+	"primaryserver/model"
 )
 
 const (
@@ -27,57 +28,54 @@ func decode(reader io.Reader, target interface{}) error {
 	return nil
 }
 
-func searchProductsInSecondaryServer(productName, uuid string) {
+func SearchProductsInSecondaryServer(productName, uuid string) {
 	secondaryServers := server.GetSecondaryServers()
 
 	for _, server := range secondaryServers {
 		serverURL := fmt.Sprintf(SecondaryServerSearchEndpoint, server, productName)
-		wg.Add(1)
+		model.Wg.Add(1)
 		go func(productName, serverURL, uuid string) {
-			defer wg.Done()
+			defer model.Wg.Done()
 			products, err := getSecondaryServerResponse(productName, serverURL)
 			if err != nil {
-				productMapMutex.Lock()
-				productDetails := productMap[uuid]
+				model.ProductMapMutex.Lock()
+				productDetails := model.ProductMap[uuid]
 				productDetails.Errors = append(productDetails.Errors, err)
-				productMap[uuid] = productDetails
-				productMapMutex.Unlock()
+				model.ProductMap[uuid] = productDetails
+				model.ProductMapMutex.Unlock()
 
 				return
 			}
-			productMapMutex.Lock()
-			productDetails := productMap[uuid]
+			model.ProductMapMutex.Lock()
+			productDetails := model.ProductMap[uuid]
 			productDetails.Products = append(productDetails.Products, products...)
-			productMap[uuid] = productDetails
-			productMapMutex.Unlock()
+			model.ProductMap[uuid] = productDetails
+			model.ProductMapMutex.Unlock()
 		}(productName, serverURL, uuid)
 	}
 
-	wg.Wait()
+	model.Wg.Wait()
 
-	productMapMutex.Lock()
-	productDetails := productMap[uuid]
+	model.ProductMapMutex.Lock()
+	productDetails := model.ProductMap[uuid]
 	productDetails.IsProcessComplete = true
-	productMap[uuid] = productDetails
-	productMapMutex.Unlock()
+	model.ProductMap[uuid] = productDetails
+	model.ProductMapMutex.Unlock()
 }
 
-func getSecondaryServerResponse(productName, url string) ([]map[string]interface{}, error) {
+func getSecondaryServerResponse(productName, url string) ([]model.Product, error) {
 	response, err := http.Get(url)
 	if err != nil {
 		fmt.Println("error in sending get request to secondary server: ", err)
 		return nil, err
 	}
-	fmt.Println("Hi, 75")
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		fmt.Printf("expected status code to be 200 but got %v\n", response.StatusCode)
 		return nil, fmt.Errorf("status code is not 200")
 	}
-	fmt.Println("Hi, 83")
-	var products []map[string]interface{}
+	var products []model.Product
 	err = decodeResponse(response.Body, &products)
-	fmt.Println("Hi, 86")
 	if err != nil {
 		fmt.Printf("error decoding response: %s\n", err)
 		return nil, err

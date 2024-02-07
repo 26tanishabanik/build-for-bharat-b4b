@@ -1,19 +1,15 @@
 package main
 
 import (
-	"sync"
-
 	"github.com/gin-gonic/gin"
-)
 
-var productMap map[string]ProductDetails = map[string]ProductDetails{}
-var productMapMutex sync.RWMutex
-var wg sync.WaitGroup
+	"primaryserver/handler"
+)
 
 func main() {
 	router := gin.Default()
-	router.GET("/health", HealthCheck)
-	router.GET("/productNames/:wordToSearch", GetSubStringMatch)
-	router.GET("/productResults/:productName", GetProductResults)
+	router.GET("/health", handler.HealthCheck)
+	router.GET("/productNames/:wordToSearch", handler.GetSubStringMatch)
+	router.GET("/productResults/:productName", handler.GetProductResults)
 	router.Run("localhost:8080")
 }
