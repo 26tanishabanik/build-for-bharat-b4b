@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/elastic/go-elasticsearch/v8/esapi"
@@ -33,7 +32,7 @@ func SearchProducts(productName string) ([]model.Product, error) {
 	var response map[string]interface{}
 	query := fmt.Sprintf(`
 		{
-			"query": { 
+			"query": {
 				"match": {
 					"productName": "%s"
 			  	}
@@ -56,9 +55,7 @@ func SearchProducts(productName string) ([]model.Product, error) {
 	hits := response["hits"].(map[string]interface{})["hits"].([]interface{})
 	for _, hit := range hits {
 		result := model.Product{}
-		// productInterface := hit.(map[string]interface{})["_source"].(map[string]interface{})
 		productInterface := hit.(map[string]interface{})
-		log.Println("_id: ", productInterface["_id"])
 		updatedData, err := json.Marshal(productInterface)
 		if err != nil {
 			fmt.Println("error in marshalling raw product: ", err)
