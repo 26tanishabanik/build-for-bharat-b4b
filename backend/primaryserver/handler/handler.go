@@ -22,11 +22,15 @@ func HealthCheck(c *gin.Context) {
 }
 
 func GetSubStringMatch(c *gin.Context) {
+	maxMatches := 6
 	wordToSearch := c.Param("word")
 	payload := model.Payload{}
 	for _, name := range model.ListOfProductNames {
 		if strings.Contains(strings.ToLower(name), strings.ToLower(wordToSearch)) {
 			payload.MatchedWords = append(payload.MatchedWords, name)
+			if len(payload.MatchedWords) == maxMatches {
+				break
+			}
 		}
 	}
 	c.JSON(http.StatusOK, payload)
@@ -52,19 +56,20 @@ func GetProductResults(c *gin.Context) {
 	} else {
 		var productDetails model.ProductDetails
 		var response model.ResponseToClient
+
 		model.ProductMapMutex.RLock()
 		productDetails = model.ProductMap[clientUUID]
 		model.ProductMapMutex.RUnlock()
 
 		if productDetails.IsProcessComplete {
+			response.IsResult = true
 			response.Products = productDetails.Products
-			response.UUID = clientUUID
 			fmt.Printf("Received products for uuid %s: %v\n", clientUUID, productDetails.Products)
 			c.JSON(http.StatusOK, response)
 			delete(model.ProductMap, clientUUID)
 		} else {
-			response.Products = []model.Product{}
-			response.UUID = clientUUID
+			response.IsResult = false
+			response.Products = nil
 			c.JSON(http.StatusOK, response)
 		}
 	}
