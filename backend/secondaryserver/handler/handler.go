@@ -19,6 +19,7 @@ func HealthCheck(c *gin.Context) {
 
 func HandleSearch(c *gin.Context) {
 	productName := c.Param("productName")
+	fmt.Println("Product Name: ", productName)
 	results, err := utils.SearchProducts(productName)
 	if err != nil {
 		fmt.Println("error in getting the product list from elasticsearch: ", err)

@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	"github.com/elastic/go-elasticsearch/v8/esapi"
+
 	"secondaryserver/model"
 )
 
@@ -50,11 +52,13 @@ func SearchProducts(productName string) ([]model.Product, error) {
 		fmt.Printf("error decoding response: %s\n", err)
 		return nil, err
 	}
+	fmt.Println("Results: ", results)
 	hits := response["hits"].(map[string]interface{})["hits"].([]interface{})
 	for _, hit := range hits {
 		result := model.Product{}
-		productInterface := hit.(map[string]interface{})["_source"].(map[string]interface{})
-		delete(productInterface, "description")
+		// productInterface := hit.(map[string]interface{})["_source"].(map[string]interface{})
+		productInterface := hit.(map[string]interface{})
+		log.Println("_id: ", productInterface["_id"])
 		updatedData, err := json.Marshal(productInterface)
 		if err != nil {
 			fmt.Println("error in marshalling raw product: ", err)
@@ -69,4 +73,3 @@ func SearchProducts(productName string) ([]model.Product, error) {
 	}
 	return results, nil
 }
-

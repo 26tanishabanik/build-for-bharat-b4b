@@ -22,11 +22,11 @@ func (p *Product) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return err
 	}
-	p.Price = raw["price"].(string)
-	p.ProductID = raw["productID"].(string)
-	p.Quantity = raw["quantity"].(string)
-	p.ProductName = raw["productName"].(string)
-	p.Seller = raw["seller"].(string)
-	p.Image = raw["image"].(string)
+	p.Price = raw["_source"].(map[string]interface{})["price"].(string)
+	p.ProductID = raw["_id"].(string)
+	p.Quantity = raw["_source"].(map[string]interface{})["quantity"].(string)
+	p.ProductName = raw["_source"].(map[string]interface{})["productName"].(string)
+	p.Seller = raw["_source"].(map[string]interface{})["seller"].(string)
+	p.Image = raw["_source"].(map[string]interface{})["image"].(string)
 	return nil
 }
