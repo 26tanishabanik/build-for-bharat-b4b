@@ -19,11 +19,12 @@ function Search() {
 	const [inputFocused, setInputFocused] = useState<boolean>(false);
 	const [mouseInSearchResults, setMouseInSearchResults] = useState<boolean>(false);
 	const [listToDisplay, setListToDisplay] = useState<string[]>([]);
+	const [currentFocusedListItem, setCurrentFocusedListItem] = useState<number>(-1);
 
 	const dispatch = useDispatch();
 	const location = useLocation();
 	const navigate = useNavigate();
-	const inputRef = useRef<HTMLInputElement|null>(null);
+	const inputRef = useRef<HTMLInputElement | null>(null);
 
 	useEffect(() => {
 		if (searchQuery !== "") {
@@ -90,8 +91,17 @@ function Search() {
 							{
 								listToDisplay?.map((fruit, i) => {
 									return (
-										<Link key={i} to={`/search?q=${fruit}`} onClick={() => setSearchQuery("")}>
-											<Box key={i} p={2} rounded="md" bgColor="lightgray">
+										<Link key={i} to={`/search?q=${fruit.toLowerCase()}`} onClick={() => {
+												setSearchQuery(fruit.toLowerCase());
+												setInputFocused(false);
+												if (inputRef.current !== null) {
+													inputRef.current.blur();
+												}
+												dispatch(removeBackgroundOverlay(location.pathname));
+											}}>
+											<Box key={i} p={2} rounded="md"
+												bgColor={i === currentFocusedListItem ? "lightgray" : "white"}
+												onMouseEnter={() => setCurrentFocusedListItem(i)} onMouseOut={() => setCurrentFocusedListItem(-1)}>
 												{fruit}
 											</Box>
 										</Link>
