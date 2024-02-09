@@ -18,8 +18,8 @@ var api_key = "MU5XQ1hvMEI5NWN3MVdkYzBuSTE6VExwUTRDdUpUMTZ2REg0c1NWRjdIQQ=="
 func initElasticsearch() {
 	var err error
 	cfg := elasticsearch.Config{
-        CloudID: cloud_id,
-        APIKey: api_key,
+		CloudID: cloud_id,
+		APIKey:  api_key,
 	}
 	model.ES, err = elasticsearch.NewClient(cfg)
 	if err != nil {
@@ -34,6 +34,5 @@ func main() {
 	router := gin.Default()
 	router.GET("/health", handler.HealthCheck)
 	router.GET("/search/:productName", handler.HandleSearch)
-	router.Run("localhost:9090")
+	router.Run("0.0.0.0:9090")
 }
-

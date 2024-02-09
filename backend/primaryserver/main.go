@@ -11,7 +11,7 @@ import (
 func main() {
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET"},
 		AllowHeaders:     []string{"Origin"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -21,5 +21,5 @@ func main() {
 	router.GET("/health", handler.HealthCheck)
 	router.GET("/search/:word", handler.GetSubStringMatch)
 	router.GET("/products/:name", handler.GetProductResults)
-	router.Run("localhost:8080")
+	router.Run("0.0.0.0:8080")
 }
