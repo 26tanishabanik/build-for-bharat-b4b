@@ -1,0 +1,18 @@
+[Unit]
+Description=primary-server service
+ConditionPathExists=/usr/local/bin/primary-server
+After=network.target
+Requires=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+LimitNOFILE=1024
+Restart=always
+RestartSec=5
+ExecStart=/usr/local/bin/primary-server
+PermissionsStartOnly=true
+
+[Install]
+WantedBy=multi-user.target
